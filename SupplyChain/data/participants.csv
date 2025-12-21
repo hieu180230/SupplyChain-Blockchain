@@ -1,0 +1,15 @@
+id,name,role,wallet_address,location,description
+1,Thorakao,Manufacturer,M1,"HCM, Vietnam",Chuyen my pham thien nhien truyen thong
+2,Cocoon VN,Manufacturer,M2,"Dak Lak, Vietnam","My pham thuan chay tu ca phe, bi dao"
+3,L'Oreal VN,Manufacturer,M3,"Dong Nai, Vietnam",Tap doan my pham hang dau the gioi
+4,Rohto,Manufacturer,M4,"Binh Duong, Vietnam","Chuyen cac dong Sunplay, LipIce, Hada Labo"
+5,Unilever VN,Manufacturer,M5,"Cu Chi, HCM","Tap doan da quoc gia (Pond's, Hazeline)"
+6,DKSH Vietnam,Distributor,D1,"VSIP 1, Binh Duong",Tap doan dich vu phat trien thi truong so 1 chau A
+7,Mesa Group,Distributor,D2,"Tan Binh, HCM",Nha phan phoi hang tieu dung va my pham da kenh
+8,Thuy Loc Corp,Distributor,D3,"District 3, HCM",Chuyen phan phoi doc quyen my pham cao cap
+9,Phu Thai Group,Distributor,D4,Ha Noi,Tap doan phan phoi va ban le hang dau mien Bac
+10,Hasaki,Retailer,R1,"District 10, HCM",Chuoi cua hang my pham chinh hang
+11,Guardian,Retailer,R2,"District 1, HCM",Chuoi ban le suc khoe va sac dep
+12,Watsons,Retailer,R3,"Aeon Mall, HN",Nha ban le my pham lon nhat Chau A
+13,Matsukiyo,Retailer,R4,"Ben Thanh, HCM",Chuoi duoc my pham den tu Nhat Ban
+14,Beauty Garden,Retailer,R5,"Cau Giay, HN",He thong phan phoi my pham chinh hang
