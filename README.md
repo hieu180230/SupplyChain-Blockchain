@@ -87,3 +87,6 @@ npx hardhat run scripts/setup-data.ts --network localhost
 ```
 
 ### Run frontend
+```bash
+npm run start
+```
