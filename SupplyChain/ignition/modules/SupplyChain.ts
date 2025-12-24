@@ -1,7 +1,8 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 export default buildModule("SupplyChainModule", (m) => {
-  const supplyChain = m.contract("SupplyChain");
+  const roleManager = m.contract("RoleManager");
+  const supplyChain = m.contract("SupplyChain", [roleManager]);
   
-  return { supplyChain };
+  return { roleManager, supplyChain };
 });

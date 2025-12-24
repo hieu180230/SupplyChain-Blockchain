@@ -1,22 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import { RoleManager } from "./RoleManager.sol";
 import { SupplyChain } from "./SupplyChain.sol";
 import { Test } from "forge-std/Test.sol";
 
 contract SupplyChainTest is Test {
+    RoleManager roleManager;
     SupplyChain supplyChain;
 
-    address admin = address(0xA1);
-    address manufacturer = address(0xB1);
-    address distributor = address(0xC1);
-    address retailer = address(0xD1);
+    address admin = makeAddr("admin");
+    address manufacturer = makeAddr("manufacturer");
+    address distributor = makeAddr("distributor");
+    address retailer = makeAddr("retailer");
+
+    uint constant TIMESTAMP = 1000;
+    string constant PRODUCT_CODE = "LAPTOP-001";
+    string constant PRODUCT_NAME = "Gaming Laptop";
+    string constant IPFS_HASH = "Qmhash";
 
     function setUp() public {
-        supplyChain = new SupplyChain();
-        supplyChain.grantRole(supplyChain.MANUFACTURER_ROLE(), manufacturer);
-        supplyChain.grantRole(supplyChain.DISTRIBUTOR_ROLE(), distributor);
-        supplyChain.grantRole(supplyChain.RETAILER_ROLE(), retailer);
+        roleManager = new RoleManager();
+        supplyChain = new SupplyChain(address(roleManager));
+        roleManager.addParticipant(manufacturer, roleManager.MANUFACTURER_ROLE(), "Manufacturer Inc", TIMESTAMP);
+        roleManager.addParticipant(distributor, roleManager.DISTRIBUTOR_ROLE(), "Big Distributor", TIMESTAMP);
+        roleManager.addParticipant(retailer, roleManager.RETAILER_ROLE(), "Best Retailer", TIMESTAMP);
     }
 
     function beforeTestSetup(bytes4 testSelector) public pure returns(bytes[] memory beforeTestCalldata) {
@@ -81,39 +89,39 @@ contract SupplyChainTest is Test {
     /* ========== AddParticipant ========== */
     function test_AddParticipantToParticipantList() public {
         address _account = address(0x11);
-        supplyChain.addParticipant(_account, supplyChain.MANUFACTURER_ROLE(), "Manu", 1000);
-        (string memory name, bytes32 role) = supplyChain.participants(_account);
+        roleManager.addParticipant(_account, roleManager.MANUFACTURER_ROLE(), "Manu", TIMESTAMP);
+        (string memory name, bytes32 role) = roleManager.participants(_account);
 
         assertEq(name, "Manu");
-        assertEq(role, supplyChain.MANUFACTURER_ROLE());
-        assertTrue(supplyChain.hasRole(supplyChain.MANUFACTURER_ROLE(), _account));
+        assertEq(role, roleManager.MANUFACTURER_ROLE());
+        assertTrue(roleManager.hasRole(roleManager.MANUFACTURER_ROLE(), _account));
     }
 
     function test_AddParticipantEmitsEvent() public {
         address _account = address(0x11);
         vm.expectEmit();
-        emit SupplyChain.AddParticipant(_account, supplyChain.MANUFACTURER_ROLE(), 1000);
+        emit RoleManager.AddParticipant(_account, roleManager.MANUFACTURER_ROLE(), TIMESTAMP);
 
-        supplyChain.addParticipant(_account, supplyChain.MANUFACTURER_ROLE(), "Manu", 1000);
+        roleManager.addParticipant(_account, roleManager.MANUFACTURER_ROLE(), "Manu", TIMESTAMP);
     }
 
     /* ========== removeParticipant ========== */
     function test_RemoveParticipantFromParticipantList() public {
         address _account = address(0x11);
-        supplyChain.removeParticipant(_account, supplyChain.MANUFACTURER_ROLE(), 1000);
-        (string memory name, bytes32 role) = supplyChain.participants(_account);
+        roleManager.removeParticipant(_account, roleManager.MANUFACTURER_ROLE(), TIMESTAMP);
+        (string memory name, bytes32 role) = roleManager.participants(_account);
 
         assertEq(name, "");
         assertEq(role, bytes32(0));
-        assertFalse(supplyChain.hasRole(supplyChain.MANUFACTURER_ROLE(), _account));
+        assertFalse(roleManager.hasRole(roleManager.MANUFACTURER_ROLE(), _account));
     }
 
     function test_RemoveParticipantEmitsEvent() public {
         address _account = address(0x11);
         vm.expectEmit();
-        emit SupplyChain.RemoveParticipant(_account, supplyChain.MANUFACTURER_ROLE(), 1000);
+        emit RoleManager.RemoveParticipant(_account, roleManager.MANUFACTURER_ROLE(), TIMESTAMP);
 
-        supplyChain.removeParticipant(_account, supplyChain.MANUFACTURER_ROLE(), 1000);
+        roleManager.removeParticipant(_account, roleManager.MANUFACTURER_ROLE(), TIMESTAMP);
     }
 
     /* ========== initProduct ========== */

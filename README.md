@@ -64,21 +64,27 @@ Hardhat Ignition 🚀
 Deploying [ SupplyChainModule ]
 
 Batch #1
+  Executed SupplyChainModule#RoleManager
+
+Batch #2
   Executed SupplyChainModule#SupplyChain
 
 [ SupplyChainModule ] successfully deployed 🚀
 
 Deployed Addresses
 
-SupplyChainModule#SupplyChain - 0x5FbDB2315678afecb367f032d93F642f64180aa3
+SupplyChainModule#RoleManager - 0x5FbDB2315678afecb367f032d93F642f64180aa3
+SupplyChainModule#SupplyChain - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
 ```
-- ***About the Contract Address***: When deploying to the Hardhat local network (`npx hardhat node`), the blockchain starts from a clean, deterministic state. The first deployed contract using the default Hardhat deployer account will **always have the above address**. If the deployed contract address matches the output above, **you can safely skip the “Important Note” section below**:
+- ***About the Contract Address***: When deploying to the Hardhat local network (`npx hardhat node`), the blockchain starts from a clean, deterministic state. The `RoleManager` and `SupplyChain` contracts using the default Hardhat deployer account will **always have the above addresses**. If the deployed contract addresses match the output above, **you can safely skip the “Important Note” section below**:
 ```bash
-0x5FbDB2315678afecb367f032d93F642f64180aa3
+SupplyChainModule#RoleManager - 0x5FbDB2315678afecb367f032d93F642f64180aa3
+SupplyChainModule#SupplyChain - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
 ```
-- ***Important Note***: If the deployed contract address is different from the one shown above, you must update the contract address manually in the `scripts/grant-roles.ts` and `scripts/setup-data.ts`. Update the following line in each file, replace it with **your actual deployed contract address**:
+- ***Important Note***: If the deployed contract addresses are different from the one shown above, you must update the contract address manually in the `scripts/grant-roles.ts` and `scripts/setup-data.ts`. Update the following line in each file, replace it with **your actual deployed contract addresses**:
 ```bash
-const SUPPLY_CHAIN_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const ROLE_MANAGER_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; # grant-roles.ts
+const SUPPLY_CHAIN_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"; # setup-data.ts
 ```
 - Run the scripts to grant roles and setup data
 ```bash

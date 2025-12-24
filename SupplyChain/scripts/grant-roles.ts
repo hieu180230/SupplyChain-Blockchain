@@ -11,8 +11,10 @@ const MANUFACTURER_ROLE = keccak256(toUtf8Bytes("MANUFACTURER_ROLE"));
 const DISTRIBUTOR_ROLE = keccak256(toUtf8Bytes("DISTRIBUTOR_ROLE"));
 const RETAILER_ROLE = keccak256(toUtf8Bytes("RETAILER_ROLE"));
 
-const SUPPLY_CHAIN_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-const supplyChain = await ethers.getContractAt("SupplyChain", SUPPLY_CHAIN_ADDRESS);
+const TIMESTAMP = 173000000;
+
+const ROLE_MANAGER_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const roleManager = await ethers.getContractAt("RoleManager", ROLE_MANAGER_ADDRESS);
 
 async function main() {
     const records: any[] = [];
@@ -33,11 +35,11 @@ async function main() {
 
             if (role) { 
                 console.log(`Granting ${records[i].role} → ${records[i].name}: ${await accounts[i + 1].getAddress()}`);
-                await supplyChain.connect(admin).addParticipant(
+                await roleManager.connect(admin).addParticipant(
                     await accounts[i + 1].getAddress(),
                     role,
                     records[i].name,
-                    173000000
+                    TIMESTAMP
                 );
             }
         }

@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import "./RoleManager.sol";
 
-contract SupplyChain is AccessControl {
-    /* ========== ROLES ========== */
-    bytes32 public constant MANUFACTURER_ROLE = keccak256("MANUFACTURER_ROLE");
-    bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
-    bytes32 public constant RETAILER_ROLE = keccak256("RETAILER_ROLE");
+contract SupplyChain {
+    RoleManager public roleManager;
 
     /* ========== PRODUCT ========== */
     enum ProductState { 
         None, 
-        Manufacturing,  // init product
-        QC_Passed,      // passed QC
-        Packaged,       // finish packaging
-        AtDistributor,  // distributor received
-        AtRetailer,     // retailer received
-        Sold            // customer bought
+        Manufacturing,
+        QC_Passed,
+        Packaged,
+        AtDistributor,
+        AtRetailer,
+        Sold
     }
     
     struct Product {
@@ -29,75 +26,66 @@ contract SupplyChain is AccessControl {
         ProductState state;
         uint timestamp;
     }
+
     mapping(uint => Product) public products;
     uint public productCount;
     mapping(string => uint) public productIdByCode;
 
-    /* ========== PARTICIPANT ========== */
-    struct Participant {
-        string name;
-        bytes32 role;
-    }
-    mapping(address => Participant) public participants;
-
     /* ========== EVENTS ========== */
     event InitProduct(uint indexed id, address owner, uint timestamp);
-    event UpdateProductState(uint indexed id, ProductState newState, address from, address to, uint timestamp);
-
-    event AddParticipant(address indexed account, bytes32 role, uint timestamp);
-    event RemoveParticipant(address indexed account, bytes32 role, uint timestamp);
+    event UpdateProductState(
+        uint indexed id,
+        ProductState newState,
+        address from,
+        address to,
+        uint timestamp
+    );
 
     /* ========== CONSTRUCTOR ========== */
-    constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        participants[msg.sender] = Participant({
-            name: "Admin",
-            role: DEFAULT_ADMIN_ROLE
-        });
+    constructor(address _roleManager) {
+        roleManager = RoleManager(_roleManager);
     }
 
     /* ========== MODIFIERS ========== */
     modifier productExists(uint _id) {
-        require(_id <= productCount && _id > 0, "Product does not exist.");
+        require(_id <= productCount && _id > 0, "Product does not exist");
         _;
     }
 
     modifier onlyOwner(uint _id) {
-        require(products[_id].currentOwner == msg.sender, "Only current owner of the product can perform this action.");
+        require(products[_id].currentOwner == msg.sender, "Not owner");
         _;
     }
 
     modifier notSold(uint _id) {
-        require(products[_id].state != ProductState.Sold, "Product was sold.");
+        require(products[_id].state != ProductState.Sold, "Already sold");
         _;
     }
 
-    /* ========== ADMIN FUNCTIONS ========== */
-    function addParticipant(address _account, bytes32 _role, string calldata _name, uint _timestamp) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_account != address(0), "Invalid account.");
-        require(_role == MANUFACTURER_ROLE || _role == DISTRIBUTOR_ROLE || _role == RETAILER_ROLE, "Invalid role.");
-        _grantRole(_role, _account);
-        participants[_account] = Participant({
-            name: _name,
-            role: _role
-        });
-
-        emit AddParticipant(_account, _role, _timestamp);
+    modifier onlyManufacturer() {
+        require(roleManager.isManufacturer(msg.sender), "Not manufacturer");
+        _;
     }
 
-    function removeParticipant(address _account, bytes32 _role, uint _timestamp) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(hasRole(_role, _account), "Account does not have this role.");
-        _revokeRole(_role, _account);
-        delete participants[_account];
+    modifier onlyDistributor() {
+        require(roleManager.isDistributor(msg.sender), "Not distributor");
+        _;
+    }
 
-        emit RemoveParticipant(_account, _role, _timestamp);
+    modifier onlyRetailer() {
+        require(roleManager.isRetailer(msg.sender), "Not retailer");
+        _;
     }
 
     /* ========== PRODUCT LIFECYCLE FUNCTIONS ========== */
-    // Initialze product
-    function initProduct(string calldata _code, string calldata _name, string calldata _ipfsHash, uint _timestamp) public onlyRole(MANUFACTURER_ROLE) {
-        require(bytes(_code).length > 0, "Product code cannot be empty.");
-        require(productIdByCode[_code] == 0, "Product with this code already exists.");
+    function initProduct(
+        string calldata _code,
+        string calldata _name,
+        string calldata _ipfsHash,
+        uint _timestamp
+    ) external onlyManufacturer {
+        require(bytes(_code).length > 0, "Code empty");
+        require(productIdByCode[_code] == 0, "Code existed");
 
         productCount++;
         products[productCount] = Product({
@@ -111,32 +99,43 @@ contract SupplyChain is AccessControl {
         });
         productIdByCode[_code] = productCount;
 
-        emit InitProduct(productCount, products[productCount].currentOwner, _timestamp);
+        emit InitProduct(productCount, msg.sender, _timestamp);
         emit UpdateProductState(productCount, ProductState.Manufacturing, msg.sender, msg.sender, _timestamp);
     }
 
-    // Pass Quality Control
-    function passQC(uint _id, uint _timestamp) public productExists(_id) onlyOwner(_id) onlyRole(MANUFACTURER_ROLE) {
-        require(products[_id].state == ProductState.Manufacturing, "The current state does not allow QC pass.");
+    function passQC(uint _id, uint _timestamp) 
+        external 
+        productExists(_id) 
+        onlyOwner(_id) 
+        onlyManufacturer 
+    {
+        require(products[_id].state == ProductState.Manufacturing, "Invalid state");
         products[_id].state = ProductState.QC_Passed;
         products[_id].timestamp = _timestamp;
-
         emit UpdateProductState(_id, ProductState.QC_Passed, msg.sender, msg.sender, _timestamp);
     }
 
-    // Package Product
-    function packageProduct(uint _id, uint _timestamp) public productExists(_id) onlyOwner(_id) onlyRole(MANUFACTURER_ROLE) {
-        require(products[_id].state == ProductState.QC_Passed, "The current state does not allow packaging.");
+    function packageProduct(uint _id, uint _timestamp) 
+        external 
+        productExists(_id) 
+        onlyOwner(_id) 
+        onlyManufacturer 
+    {
+        require(products[_id].state == ProductState.QC_Passed, "Invalid state");
         products[_id].state = ProductState.Packaged;
         products[_id].timestamp = _timestamp;
-
         emit UpdateProductState(_id, ProductState.Packaged, msg.sender, msg.sender, _timestamp);
     }
 
-    // Manufacturer transfers to Distributor
-    function transferToDistributor(uint _id, address _distributor, uint _timestamp) public productExists(_id) onlyOwner(_id) onlyRole(MANUFACTURER_ROLE) {
-        require(hasRole(DISTRIBUTOR_ROLE, _distributor), "Receiver must be a Distributor.");
-        require(products[_id].state == ProductState.Packaged, "The current state does not allow transfering to Distributor");
+    function transferToDistributor(uint _id, address _distributor, uint _timestamp) 
+        external 
+        productExists(_id) 
+        onlyOwner(_id) 
+        onlyManufacturer 
+    {
+        require(roleManager.isDistributor(_distributor), "Not distributor");
+        require(products[_id].state == ProductState.Packaged, "Invalid state");
+
         products[_id].currentOwner = _distributor;
         products[_id].state = ProductState.AtDistributor;
         products[_id].timestamp = _timestamp;
@@ -144,10 +143,15 @@ contract SupplyChain is AccessControl {
         emit UpdateProductState(_id, ProductState.AtDistributor, msg.sender, _distributor, _timestamp);
     }
 
-    // Distributor transfers to Retailer
-    function transferToRetailer(uint _id, address _retailer, uint _timestamp) public productExists(_id) onlyOwner(_id) onlyRole(DISTRIBUTOR_ROLE) {
-        require(hasRole(RETAILER_ROLE, _retailer), "Receiver must be a Retailer.");
-        require(products[_id].state == ProductState.AtDistributor, "The current state does not allow transfering to Retailer.");
+    function transferToRetailer(uint _id, address _retailer, uint _timestamp) 
+        external 
+        productExists(_id) 
+        onlyOwner(_id) 
+        onlyDistributor 
+    {
+        require(roleManager.isRetailer(_retailer), "Not retailer");
+        require(products[_id].state == ProductState.AtDistributor, "Invalid state");
+
         products[_id].currentOwner = _retailer;
         products[_id].state = ProductState.AtRetailer;
         products[_id].timestamp = _timestamp;
@@ -155,10 +159,16 @@ contract SupplyChain is AccessControl {
         emit UpdateProductState(_id, ProductState.AtRetailer, msg.sender, _retailer, _timestamp);
     }
 
-    // Retailer sells to Consumer
-    function sellToConsumer(uint _id, uint _timestamp) public productExists(_id) onlyOwner(_id) onlyRole(RETAILER_ROLE) notSold(_id) {
-        require(products[_id].state == ProductState.AtRetailer, "The current state does not allow selling to consumer.");
-        products[_id].currentOwner  = address(0);
+    function sellToConsumer(uint _id, uint _timestamp) 
+        external 
+        productExists(_id) 
+        onlyOwner(_id) 
+        onlyRetailer 
+        notSold(_id)
+    {
+        require(products[_id].state == ProductState.AtRetailer, "Invalid state");
+
+        products[_id].currentOwner = address(0);
         products[_id].state = ProductState.Sold;
         products[_id].timestamp = _timestamp;
 
@@ -166,32 +176,26 @@ contract SupplyChain is AccessControl {
     }
 
     /* ========== VIEW FUNCTIONS ========== */
-    // Get product ID (on-chain ID) from product code (off-chain ID)
-    function getIdFromCode(string memory _idCode) public view returns (uint) {
-        uint id = productIdByCode[_idCode];
-        require(id > 0, "Product does not exist.");
+    function getIdFromCode(string memory _code) external view returns (uint) {
+        uint id = productIdByCode[_code];
+        require(id > 0, "Not exist");
         return id;
     }
 
-    // Get detailed product info
-    function getProductInfo(uint _id) public view productExists(_id) returns (string memory, string memory, address, ProductState, string memory) {
-        return (
-            products[_id].code,
-            products[_id].name,
-            products[_id].currentOwner,
-            products[_id].state,
-            products[_id].ipfsHash
-        );
-    }
-
-    function getParticipant(address _account) public view returns(string memory, string memory) {
-        require(bytes(participants[_account].name).length > 0, "Participant does not exist.");
-        string memory roleStr;
-        if (participants[_account].role == MANUFACTURER_ROLE) roleStr = "Manufacturer";
-        else if (participants[_account].role == DISTRIBUTOR_ROLE) roleStr = "Distributor";
-        else if (participants[_account].role == RETAILER_ROLE) roleStr = "Retailer";
-        else roleStr = "None";
-
-        return (participants[_account].name, roleStr);
+    function getProductInfo(uint _id) 
+        external 
+        view 
+        productExists(_id) 
+        returns (
+            string memory code,
+            string memory name,
+            address currentOwner,
+            ProductState state,
+            string memory ipfsHash,
+            uint timestamp
+        )
+    {
+        Product memory p = products[_id];
+        return (p.code, p.name, p.currentOwner, p.state, p.ipfsHash, p.timestamp);
     }
 }
