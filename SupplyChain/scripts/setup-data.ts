@@ -6,14 +6,13 @@ const { ethers } = await network.connect();
 const accounts = await ethers.getSigners();
 const admin = accounts[0];
 
-const SUPPLY_CHAIN_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const SUPPLY_CHAIN_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 const supplyChain = await ethers.getContractAt("SupplyChain", SUPPLY_CHAIN_ADDRESS);
 
 async function loadCSV(path: string) {
     const file = fs.readFileSync(path);
     return parse(file, { columns: true, trim: true});
 }
-
 
 async function main() {
     const products = await loadCSV("data/products.csv");
