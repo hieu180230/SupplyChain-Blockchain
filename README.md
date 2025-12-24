@@ -93,6 +93,12 @@ npx hardhat run scripts/setup-data.ts --network localhost
 ```
 
 ### Run frontend
+- Run the script to install dependencies
+```bash
+cd frontend
+npm install
+```
+- The start command include copying artifacts file to the frontend part
 ```bash
 npm run start
 ```
