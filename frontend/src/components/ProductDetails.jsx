@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  User,
-  Factory,
-  Package,
-  Award,
-} from "lucide-react";
+import { User, Factory, Package, Award, Globe, Calendar, ThermometerSun } from "lucide-react";
 
 const DetailRow = ({ icon: Icon, label, value, sub }) => (
   <div className="flex items-start py-3 border-b border-slate-100 last:border-0">
@@ -26,7 +21,6 @@ const DetailRow = ({ icon: Icon, label, value, sub }) => (
 );
 
 const ProductDetails = ({ data }) => {
-
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
@@ -41,14 +35,29 @@ const ProductDetails = ({ data }) => {
               </h2>
               <p className="text-slate-500 font-medium flex items-center mt-1">
                 <Factory className="w-4 h-4 mr-1" />{" "}
-                {data.ownerName || "Unknown Brand"}
+                {data.brand || "Unknown Brand"}
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100">
-            <DetailRow icon={Package} label="Batch/Code" value={data.code} />
-            <DetailRow icon={Award} label="Status" value={data.stateLabel} />
+            <DetailRow
+              icon={Package}
+              label="Batch Number"
+              value={data.batch_num}
+            />
+            <DetailRow icon={Award} label="Certificate" value={data.cert} />
+            <DetailRow icon={Globe} label="Origin" value={data.origin} />
+            <DetailRow
+              icon={Calendar}
+              label="Expiry Date"
+              value={data.expire}
+            />
+            <DetailRow
+              icon={ThermometerSun}
+              label="Storage"
+              value={data.storage_condition}
+            />
           </div>
         </div>
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-blue-50 opacity-50 z-0"></div>
