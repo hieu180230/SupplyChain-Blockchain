@@ -100,5 +100,6 @@ npm install
 ```
 - The start command include copying artifacts file to the frontend part
 ```bash
-npm run start
+npm run build
+npm start
 ```
